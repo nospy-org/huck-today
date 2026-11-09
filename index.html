@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Today — Huck</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-0:#000;--bg-1:#0a0a0a;--bg-2:#111;--bg-3:#1a1a1a;
+  --border-0:#1a1a1a;--border-1:#222;--border-2:#333;
+  --text-0:#fff;--text-1:#a0a0a0;--text-2:#555;
+  --accent:#fff;--danger:#e05252;--success:#4ead6e;--warning:#d4904a;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg-0);color:var(--text-0);min-height:100vh;min-height:100dvh;padding:env(safe-area-inset-top,16px) 16px 80px;max-width:600px;margin:0 auto}
+a{color:var(--text-1);text-decoration:none}
+
+/* Auth */
+#auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;gap:16px}
+#auth h1{font-size:1.4rem;font-weight:700;letter-spacing:-0.02em}
+#auth input{width:100%;max-width:320px;padding:12px 16px;background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;color:var(--text-0);font-size:16px;outline:none}
+#auth input:focus{border-color:var(--border-2)}
+#auth button{width:100%;max-width:320px;padding:12px;background:var(--text-0);color:var(--bg-0);border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
+#auth button:active{opacity:0.8}
+#auth .magic{background:transparent;color:var(--text-1);border:1px solid var(--border-1);font-weight:400;margin-top:-4px}
+#auth .err{color:var(--danger);font-size:13px;max-width:320px;text-align:center}
+#auth .msg{color:var(--success);font-size:13px;max-width:320px;text-align:center}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 0 12px}
+.logo{font-size:1.1rem;font-weight:700;letter-spacing:-0.02em}
+.date-nav{display:flex;align-items:center;gap:8px}
+.date-nav button{background:none;border:1px solid var(--border-1);border-radius:8px;color:var(--text-1);width:36px;height:36px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.date-nav button:active{background:var(--bg-2)}
+#date-label{font-size:14px;color:var(--text-1);min-width:100px;text-align:center;cursor:pointer}
+#date-input{position:absolute;opacity:0;width:0;height:0}
+.logout-btn{background:none;border:none;color:var(--text-2);font-size:12px;cursor:pointer;padding:4px 8px}
+
+/* Sections */
+.section{margin-top:20px}
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-2);margin-bottom:8px}
+
+/* Briefs */
+.brief{background:var(--bg-1);border:1px solid var(--border-0);border-radius:8px;padding:16px;margin-bottom:8px}
+.brief-kind{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em}
+.brief-body{font-size:14px;line-height:1.6;color:var(--text-1)}
+.brief-body h1,.brief-body h2,.brief-body h3{color:var(--text-0);font-size:14px;font-weight:700;margin:12px 0 4px}
+.brief-body p{margin:4px 0}
+.brief-body ul,.brief-body ol{padding-left:20px;margin:4px 0}
+.brief-body li{margin:2px 0}
+.brief-body strong{color:var(--text-0)}
+.brief-body code{background:var(--bg-2);padding:1px 5px;border-radius:4px;font-size:13px}
+.brief-body a{color:var(--text-0);text-decoration:underline;text-decoration-color:var(--border-2)}
+
+/* Tasks */
+.task{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:var(--bg-1);border:1px solid var(--border-0);border-radius:8px;margin-bottom:4px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity 0.15s}
+.task:active{background:var(--bg-2)}
+.task.checked{opacity:0.45}
+.task.checked .task-title{text-decoration:line-through}
+.checkbox{width:24px;height:24px;min-width:24px;border:2px solid var(--border-2);border-radius:6px;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.15s}
+.task.checked .checkbox{background:var(--success);border-color:var(--success)}
+.task.checked .checkbox::after{content:'✓';color:#000;font-size:14px;font-weight:700}
+.task-info{flex:1;min-width:0}
+.task-title{font-size:14px;line-height:1.4}
+.task-detail{font-size:12px;color:var(--text-2);margin-top:2px}
+.task-due{font-size:11px;color:var(--warning);margin-top:2px}
+
+/* Open items */
+.open-date{font-size:12px;color:var(--text-2);margin:12px 0 4px;padding-left:4px}
+
+/* Empty */
+.empty{text-align:center;color:var(--text-2);font-size:13px;padding:32px 16px}
+
+/* Safari hint */
+.safari-hint{text-align:center;font-size:11px;color:var(--text-2);padding:16px;margin-top:20px;border-top:1px solid var(--border-0)}
+.safari-hint a{text-decoration:underline}
+
+/* Loading */
+.loading{text-align:center;color:var(--text-2);padding:40px}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border-1);border-top-color:var(--text-1);border-radius:50%;animation:spin 0.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="auth">
+  <h1>Today</h1>
+  <input type="email" id="email" placeholder="Email" autocomplete="email">
+  <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+  <button id="login-btn" onclick="doLogin()">Sign In</button>
+  <button class="magic" onclick="doMagicLink()">Send Magic Link</button>
+  <div id="auth-err" class="err" style="display:none"></div>
+  <div id="auth-msg" class="msg" style="display:none"></div>
+</div>
+
+<!-- App (hidden until auth) -->
+<div id="app" style="display:none">
+  <header>
+    <div>
+      <span class="logo">Today</span>
+      <button class="logout-btn" onclick="doLogout()">sign out</button>
+    </div>
+    <div class="date-nav">
+      <button onclick="shiftDate(-1)">←</button>
+      <span id="date-label" onclick="document.getElementById('date-input').showPicker?.()"></span>
+      <input type="date" id="date-input" onchange="goToDate(this.value)">
+      <button onclick="shiftDate(1)">→</button>
+    </div>
+  </header>
+
+  <div id="content">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+
+  <div class="safari-hint">
+    Viewing in Telegram? <a href="javascript:void(0)" onclick="window.open(location.href,'_blank')">Open in Safari ↗</a> for best experience.
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// --- Config (anon key is public-safe per Supabase design) ---
+const SUPABASE_URL='https://irppuahiiwyskipdhvpp.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlycHB1YWhpaXd5c2tpcGRodnBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk5NjIxMjAsImV4cCI6MjA1NTUzODEyMH0.2s4K9Z7-ydSUO1LHPXFNOC3QQ_Lm0-aUmPMVwH-zhbY';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+let currentDate=new Date().toISOString().slice(0,10);
+let session=null;
+
+// --- Auth ---
+async function initAuth(){
+  const{data}=await sb.auth.getSession();
+  if(data.session){session=data.session;showApp();return}
+  // Check for magic link hash
+  if(location.hash.includes('access_token')){
+    const{data:d,error}=await sb.auth.getSession();
+    if(d.session){session=d.session;showApp();return}
+  }
+  document.getElementById('auth').style.display='flex';
+}
+
+async function doLogin(){
+  const email=document.getElementById('email').value.trim();
+  const pw=document.getElementById('password').value;
+  hideMsg();
+  if(!email||!pw){showErr('Enter email and password');return}
+  const{data,error}=await sb.auth.signInWithPassword({email,password:pw});
+  if(error){showErr(error.message);return}
+  session=data.session;showApp();
+}
+
+async function doMagicLink(){
+  const email=document.getElementById('email').value.trim();
+  hideMsg();
+  if(!email){showErr('Enter your email first');return}
+  const{error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+  if(error){showErr(error.message);return}
+  document.getElementById('auth-msg').textContent='Check your email for the magic link';
+  document.getElementById('auth-msg').style.display='block';
+}
+
+function showErr(m){const e=document.getElementById('auth-err');e.textContent=m;e.style.display='block'}
+function hideMsg(){document.getElementById('auth-err').style.display='none';document.getElementById('auth-msg').style.display='none'}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  session=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth').style.display='flex';
+}
+
+function showApp(){
+  document.getElementById('auth').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadDay(currentDate);
+}
+
+// --- Date nav ---
+function updateDateLabel(){
+  const d=new Date(currentDate+'T12:00:00');
+  const today=new Date().toISOString().slice(0,10);
+  let label=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  if(currentDate===today)label='Today · '+label;
+  document.getElementById('date-label').textContent=label;
+  document.getElementById('date-input').value=currentDate;
+}
+function shiftDate(n){
+  const d=new Date(currentDate+'T12:00:00');
+  d.setDate(d.getDate()+n);
+  currentDate=d.toISOString().slice(0,10);
+  loadDay(currentDate);
+}
+function goToDate(v){if(v){currentDate=v;loadDay(currentDate)}}
+
+// --- Load day ---
+async function loadDay(date){
+  updateDateLabel();
+  const el=document.getElementById('content');
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+
+  const titlePrefix=date+' ·';
+  // Fetch briefs for this date
+  const{data:docs}=await sb.from('documents').select('*')
+    .eq('folder','📬 Daily Briefs').like('title',titlePrefix+'%').order('position');
+  // Fetch tasks for this date
+  const{data:tasks}=await sb.from('tasks').select('*')
+    .contains('tags',['brief:'+date]).order('position');
+
+  let html='';
+
+  // Briefs
+  if(docs&&docs.length){
+    html+='<div class="section"><div class="section-title">Briefs</div>';
+    for(const doc of docs){
+      const kind=doc.title.replace(titlePrefix,'').trim();
+      html+='<div class="brief"><div class="brief-kind">'+esc(kind)+'</div><div class="brief-body">'+md(doc.content)+'</div></div>';
+    }
+    html+='</div>';
+  }
+
+  // Tasks
+  if(tasks&&tasks.length){
+    html+='<div class="section"><div class="section-title">Action Items</div>';
+    for(const t of tasks){
+      html+=taskHTML(t);
+    }
+    html+='</div>';
+  }
+
+  if((!docs||!docs.length)&&(!tasks||!tasks.length)){
+    html='<div class="empty">No briefs for '+date+'</div>';
+  }
+
+  // Open items from previous days
+  const{data:open}=await sb.from('tasks').select('*')
+    .contains('tags',['brief']).eq('checked',false)
+    .not('tags','cs','{"brief:'+date+'}')
+    .order('position');
+
+  if(open&&open.length){
+    html+='<div class="section"><div class="section-title">Open Items (Previous Days)</div>';
+    let lastDate='';
+    for(const t of open){
+      const bd=t.tags?.find(x=>x.startsWith('brief:'))?.replace('brief:','');
+      if(bd&&bd!==lastDate){lastDate=bd;html+='<div class="open-date">'+bd+'</div>';}
+      html+=taskHTML(t);
+    }
+    html+='</div>';
+  }
+
+  el.innerHTML=html;
+}
+
+function taskHTML(t){
+  const cls=t.checked?'task checked':'task';
+  const due=t.due_date?'<div class="task-due">Due '+t.due_date+'</div>':'';
+  const det=t.details?'<div class="task-detail">'+esc(t.details)+'</div>':'';
+  return '<div class="'+cls+'" onclick="toggleTask(this,\''+t.id+'\')" data-id="'+t.id+'">'
+    +'<div class="checkbox"></div>'
+    +'<div class="task-info"><div class="task-title">'+esc(t.title)+'</div>'+det+due+'</div></div>';
+}
+
+// --- Toggle task ---
+async function toggleTask(el,id){
+  const nowChecked=!el.classList.contains('checked');
+  el.classList.toggle('checked');
+  // Update checkbox visual immediately
+  const cb=el.querySelector('.checkbox');
+  if(nowChecked){el.querySelector('.task-title').style.textDecoration='line-through'}
+  else{el.querySelector('.task-title').style.textDecoration='none'}
+
+  const upd={checked:nowChecked,completed_at:nowChecked?new Date().toISOString():null};
+  await sb.from('tasks').update(upd).eq('id',id);
+}
+
+// --- Minimal markdown ---
+function md(s){
+  if(!s)return'';
+  return s
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+    .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs,function(m){return'<ul>'+m+'</ul>'})
+    .replace(/<\/ul>\s*<ul>/g,'')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// --- Auth listener ---
+sb.auth.onAuthStateChange((event,s)=>{
+  if(event==='SIGNED_IN'&&s){session=s;showApp()}
+});
+initAuth();
+</script>
+</body>
+</html>
