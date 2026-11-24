@@ -143,16 +143,26 @@ async function saveData(show){
   var si=document.getElementById('si');
   if(show){si.className='save-ind saving';si.textContent='Saving\u2026'}
   try{
-    var r=await sb.from('documents').select('*').eq('folder',FOLD).eq('title',DTIT);
+    var token=(await sb.auth.getSession()).data.session.access_token;
+    var hdrs={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+token,'Prefer':'return=representation'};
+    var readRes=await fetch(SB_URL+'/rest/v1/documents?folder=eq.'+encodeURIComponent(FOLD)+'&title=eq.'+encodeURIComponent(DTIT)+'&select=id,content',{headers:hdrs});
+    var remoteDocs=await readRes.json();
     var remote=[];
-    if(r.data&&r.data.length){docId=r.data[0].id;try{remote=JSON.parse(r.data[0].content).items||[]}catch(e){}}
+    if(remoteDocs&&remoteDocs.length){docId=remoteDocs[0].id;try{remote=JSON.parse(remoteDocs[0].content).items||[]}catch(e){}}
     var myIds=new Set(items.map(function(i){return i.id}));
     var merged=items.slice();
     for(var ri=0;ri<remote.length;ri++){if(!myIds.has(remote[ri].id))merged.push(remote[ri])}
     items=merged;
-    var content=JSON.stringify({items:items});
-    if(docId){var ur=await sb.from('documents').update({content:content,updated_at:new Date().toISOString()}).eq('id',docId).select();if(!ur.data||!ur.data.length){console.warn('Update returned empty, trying upsert');var id2=crypto.randomUUID();await sb.from('documents').upsert({id:docId,user_id:sess.user.id,title:DTIT,content:content,folder:FOLD,position:0,updated_at:new Date().toISOString()})}}
-    else{var id=crypto.randomUUID();await sb.from('documents').insert({id:id,user_id:sess.user.id,title:DTIT,content:content,folder:FOLD,position:0});docId=id}
+    var payload=JSON.stringify({items:items});
+    if(docId){
+      var ur=await fetch(SB_URL+'/rest/v1/documents?id=eq.'+docId,{method:'PATCH',headers:hdrs,body:JSON.stringify({content:payload,updated_at:new Date().toISOString()})});
+      var urd=await ur.json();
+      if(!urd||!urd.length){var id2=crypto.randomUUID();await fetch(SB_URL+'/rest/v1/documents',{method:'POST',headers:hdrs,body:JSON.stringify({id:id2,user_id:sess.user.id,title:DTIT,content:payload,folder:FOLD,position:0})});docId=id2}
+    }else{
+      var id=crypto.randomUUID();
+      await fetch(SB_URL+'/rest/v1/documents',{method:'POST',headers:hdrs,body:JSON.stringify({id:id,user_id:sess.user.id,title:DTIT,content:payload,folder:FOLD,position:0})});
+      docId=id;
+    }
     if(show){si.className='save-ind saved';si.textContent='Saved';setTimeout(function(){si.className='save-ind'},1200)}
   }catch(e){console.error(e);if(show){si.className='save-ind err';si.textContent='Error';setTimeout(function(){si.className='save-ind'},2000)}}
 }
@@ -264,7 +274,7 @@ async function delItem(id){if(!confirm('Delete this word?'))return;items=items.f
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-sb.auth.onAuthStateChange(function(ev,s){if(ev==='SIGNED_IN'&&s){sess=s;showApp()}});
+var appInit=false;sb.auth.onAuthStateChange(function(ev,s){if(s){sess=s}if(ev==='SIGNED_IN'&&!appInit){appInit=true;showApp()}});
 initAuth();
 
 </script>
